@@ -82,4 +82,9 @@ export function obtenerSala(codigo) {
   return request(`/api/salas/${codigo}`, { method: "GET" });
 }
 
+// HU-07: estadisticas personales (solo cuentas registradas, no invitados)
+export function obtenerEstadisticas() {
+  return request("/api/usuarios/me/stats", { method: "GET" });
+}
+
 export { API_URL };
