@@ -1,18 +1,46 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { obtenerSala } from "../api/client.js";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getUserId, iniciarPartida, obtenerSala } from "../api/client.js";
 import { conectarSala } from "../api/ws.js";
+import Chat from "../components/Chat.jsx";
 
 export default function Lobby() {
   const { codigo } = useParams();
   const [sala, setSala] = useState(null);
+  const [mensajesChat, setMensajesChat] = useState([]);
   const [error, setError] = useState(null);
+  const [iniciando, setIniciando] = useState(false);
+  const conexionRef = useRef(null);
+  const navigate = useNavigate();
+  const userId = getUserId();
 
   useEffect(() => {
     obtenerSala(codigo).then(setSala).catch((e) => setError(e.message));
-    const desconectar = conectarSala(codigo, setSala);
-    return desconectar;
+
+    const conexion = conectarSala(codigo, {
+      onRoster: setSala,
+      onChat: (msg) => setMensajesChat((prev) => [...prev, msg]),
+      onEstadoPartida: () => navigate(`/partida/${codigo}`),
+      onError: (err) => setError(err.mensaje),
+    });
+    conexionRef.current = conexion;
+    return conexion.desconectar;
   }, [codigo]);
+
+  async function handleIniciar() {
+    setError(null);
+    setIniciando(true);
+    try {
+      await iniciarPartida(codigo);
+      navigate(`/partida/${codigo}`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setIniciando(false);
+    }
+  }
+
+  const esAnfitrion = sala && userId && sala.anfitrionUserId === userId;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white px-4 py-10 flex flex-col items-center gap-6">
@@ -37,6 +65,21 @@ export default function Lobby() {
           {sala.jugadores.length} / {sala.maxJugadores} jugadores
         </p>
       )}
+
+      {esAnfitrion && (
+        <button
+          className="bg-yellow-400 text-slate-900 font-semibold rounded py-2 px-6 disabled:opacity-50"
+          disabled={iniciando || !sala || sala.jugadores.length < 2}
+          onClick={handleIniciar}
+        >
+          Iniciar partida
+        </button>
+      )}
+      {esAnfitrion && sala && sala.jugadores.length < 2 && (
+        <p className="text-slate-500 text-xs">Necesitas al menos 2 jugadores para iniciar.</p>
+      )}
+
+      <Chat mensajes={mensajesChat} onEnviar={(texto) => conexionRef.current?.enviarChat(texto)} />
     </div>
   );
 }

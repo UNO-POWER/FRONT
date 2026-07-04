@@ -35,6 +35,17 @@ export function haySesion() {
   return !!getToken();
 }
 
+/** Decodifica el payload del JWT solo para uso de UI (el servidor es quien valida de verdad). */
+export function getUserId() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    return JSON.parse(atob(token.split(".")[1])).sub;
+  } catch {
+    return null;
+  }
+}
+
 async function request(path, { method = "GET", body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
   if (auth) {
@@ -80,6 +91,11 @@ export function unirseASala(codigo) {
 
 export function obtenerSala(codigo) {
   return request(`/api/salas/${codigo}`, { method: "GET" });
+}
+
+// HU-03: el anfitrion inicia la partida
+export function iniciarPartida(codigo) {
+  return request(`/api/salas/${codigo}/iniciar`, { method: "POST" });
 }
 
 // HU-07: estadisticas personales (solo cuentas registradas, no invitados)
