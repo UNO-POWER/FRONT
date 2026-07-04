@@ -1,6 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { entrarComoInvitado, crearSala, unirseASala, setToken } from "../api/client.js";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  entrarComoInvitado,
+  crearSala,
+  unirseASala,
+  setSesion,
+  haySesion,
+  esInvitado,
+  getUsername,
+  cerrarSesion,
+} from "../api/client.js";
 
 export default function Landing() {
   const [nombre, setNombre] = useState("");
@@ -8,11 +17,13 @@ export default function Landing() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const sesionActiva = haySesion();
 
   async function asegurarSesion() {
+    if (sesionActiva) return;
     if (!nombre.trim()) throw new Error("Ingresa tu nombre para jugar");
     const auth = await entrarComoInvitado(nombre.trim());
-    setToken(auth.token);
+    setSesion({ token: auth.token, username: auth.username, esInvitado: true });
   }
 
   async function handleCrearSala() {
@@ -50,12 +61,42 @@ export default function Landing() {
         Juega UNO en tiempo real con power-ups dinamicos. Sin descargas, sin registro obligatorio.
       </p>
 
-      <input
-        className="w-full max-w-xs rounded px-3 py-2 text-black"
-        placeholder="Tu nombre"
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-      />
+      {sesionActiva ? (
+        <div className="text-center">
+          <p className="text-slate-300">
+            Jugando como <span className="text-yellow-400 font-semibold">{getUsername()}</span>
+            {esInvitado() && <span className="text-slate-500 text-sm"> (invitado)</span>}
+          </p>
+          <div className="flex gap-4 justify-center mt-1 text-sm">
+            {!esInvitado() && (
+              <Link to="/stats" className="text-yellow-400 hover:underline">
+                Ver mis estadisticas
+              </Link>
+            )}
+            <button
+              className="text-slate-400 hover:underline"
+              onClick={() => {
+                cerrarSesion();
+                navigate(0);
+              }}
+            >
+              Cerrar sesion
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <input
+            className="w-full max-w-xs rounded px-3 py-2 text-black"
+            placeholder="Tu nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+          <Link to="/cuenta" className="text-yellow-400 text-sm hover:underline -mt-3">
+            Tengo cuenta / quiero crear una (HU-06)
+          </Link>
+        </>
+      )}
 
       <div className="flex flex-col gap-3 w-full max-w-xs">
         <button

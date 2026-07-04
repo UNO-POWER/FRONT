@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const TOKEN_KEY = "uno_token";
+const GUEST_KEY = "uno_is_guest";
+const USERNAME_KEY = "uno_username";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -7,6 +9,30 @@ export function getToken() {
 
 export function setToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function setSesion({ token, username, esInvitado }) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USERNAME_KEY, username);
+  localStorage.setItem(GUEST_KEY, esInvitado ? "1" : "0");
+}
+
+export function cerrarSesion() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USERNAME_KEY);
+  localStorage.removeItem(GUEST_KEY);
+}
+
+export function getUsername() {
+  return localStorage.getItem(USERNAME_KEY);
+}
+
+export function esInvitado() {
+  return localStorage.getItem(GUEST_KEY) !== "0";
+}
+
+export function haySesion() {
+  return !!getToken();
 }
 
 async function request(path, { method = "GET", body, auth = true } = {}) {
