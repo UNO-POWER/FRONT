@@ -1,25 +1,35 @@
 {
   "name": "uno-power-ups-arena-front",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.0.20",
+    "@fontsource-variable/space-grotesk": "^5.0.20",
+    "@stomp/stompjs": "^7.0.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.3.30",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.1",
-    "@stomp/stompjs": "^7.0.0",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
+    "@types/react": "^18.3.4",
+    "@types/react-dom": "^18.3.0",
+    "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4",
     "vite": "^5.4.2"
   }
 }

@@ -1,0 +1,41 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/space-grotesk";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-surface text-slate-100 antialiased;
+  }
+
+  /* Focus visible consistente en toda la app (WCAG 2.4.7) */
+  :focus-visible {
+    @apply outline-none ring-2 ring-indigo-400 ring-offset-2 ring-offset-surface;
+  }
+
+  ::selection {
+    @apply bg-indigo-500/40;
+  }
+
+  /* Scrollbar sutil acorde al tema */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-500/25;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
