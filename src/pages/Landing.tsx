@@ -20,6 +20,7 @@ export default function Landing() {
 
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
+  const [salaPublica, setSalaPublica] = useState(false);
   const [accionEnCurso, setAccionEnCurso] = useState<"crear" | "unirse" | null>(null);
   const [errorNombre, setErrorNombre] = useState<string>();
 
@@ -39,7 +40,7 @@ export default function Landing() {
     setAccionEnCurso("crear");
     try {
       if (!(await asegurarSesion())) return;
-      const sala = await crearSala(false);
+      const sala = await crearSala(salaPublica);
       navigate(`/sala/${sala.codigo}`);
     } catch (e) {
       toast(e instanceof Error ? e.message : "No se pudo crear la sala.", "error");
@@ -131,14 +132,25 @@ export default function Landing() {
               />
             )}
 
-            <Button
-              size="lg"
-              loading={accionEnCurso === "crear"}
-              disabled={accionEnCurso === "unirse"}
-              onClick={handleCrear}
-            >
-              Crear sala
-            </Button>
+            <div className="flex flex-col gap-2.5">
+              <Button
+                size="lg"
+                loading={accionEnCurso === "crear"}
+                disabled={accionEnCurso === "unirse"}
+                onClick={handleCrear}
+              >
+                Crear sala
+              </Button>
+              <label className="flex cursor-pointer items-center justify-center gap-2 text-xs text-slate-400">
+                <input
+                  type="checkbox"
+                  checked={salaPublica}
+                  onChange={(e) => setSalaPublica(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-indigo-500"
+                />
+                Sala publica: visible para cualquiera en el matchmaking
+              </label>
+            </div>
 
             <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-slate-600">
               <span className="h-px flex-1 bg-line" />
@@ -168,6 +180,13 @@ export default function Landing() {
                 Unirse
               </Button>
             </form>
+
+            <Link
+              to="/salas"
+              className="text-center text-sm text-indigo-400 transition-colors hover:text-indigo-300 hover:underline"
+            >
+              Explorar salas publicas →
+            </Link>
           </Card>
         </motion.div>
 

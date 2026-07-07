@@ -29,3 +29,18 @@ export interface EstadisticasResponse {
   partidasGanadas: number;
   rachaActual: number;
 }
+
+// HU-09: matchmaking publico
+export interface SalaPublicaResponse {
+  codigo: string;
+  anfitrionUsername: string;
+  jugadores: number;
+  maxJugadores: number;
+}
+
+export interface ListaSalasPublicasResponse {
+  salas: SalaPublicaResponse[];
+  pagina: number;
+  totalPaginas: number;
+  totalSalas: number;
+}

@@ -1,4 +1,9 @@
-import type { AuthResponse, EstadisticasResponse, SalaResponse } from "@/types/api";
+import type {
+  AuthResponse,
+  EstadisticasResponse,
+  ListaSalasPublicasResponse,
+  SalaResponse,
+} from "@/types/api";
 import { obtenerToken } from "./token";
 
 export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
@@ -61,6 +66,10 @@ export const obtenerSala = (codigo: string) => request<SalaResponse>(`/api/salas
 
 export const iniciarPartida = (codigo: string) =>
   request<SalaResponse>(`/api/salas/${codigo}/iniciar`, { method: "POST" });
+
+// HU-09: matchmaking publico (listado paginado de salas abiertas con cupo)
+export const listarSalasPublicas = (pagina = 0, tamano = 20) =>
+  request<ListaSalasPublicasResponse>(`/api/salas/publicas?pagina=${pagina}&tamano=${tamano}`);
 
 // ── Estadisticas (HU-07) ────────────────────────────────────────────────────
 export const obtenerEstadisticas = () => request<EstadisticasResponse>("/api/usuarios/me/stats");

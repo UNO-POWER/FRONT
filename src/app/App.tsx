@@ -6,6 +6,7 @@ import { PageLoader } from "./PageLoader";
 // Code splitting por pantalla (DESIGN.md §10)
 const Landing = lazy(() => import("@/pages/Landing"));
 const Auth = lazy(() => import("@/pages/Auth"));
+const SalasPublicas = lazy(() => import("@/pages/SalasPublicas"));
 const Lobby = lazy(() => import("@/pages/Lobby"));
 const Partida = lazy(() => import("@/pages/Partida"));
 const Stats = lazy(() => import("@/pages/Stats"));
@@ -18,6 +19,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/salas" element={<SalasPublicas />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/sala/:codigo" element={<Lobby />} />
           <Route path="/partida/:codigo" element={<Partida />} />
