@@ -1,0 +1,20 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UNO Power-Ups Arena">
+  <rect width="64" height="64" rx="14" fill="#0A0D14"/>
+  <g transform="translate(32 44) scale(0.9)">
+    <g transform="rotate(-24)"><g transform="translate(0 -15)">
+      <rect x="-10" y="-15" width="20" height="30" rx="3.4" fill="#F43F5E" stroke="#0A0D14" stroke-width="1.1"/>
+      <ellipse cx="0" cy="0" rx="6.2" ry="13" fill="#fff" transform="rotate(22)"/>
+      <text x="0" y="0.5" fill="#F43F5E" font-size="13" font-weight="800" text-anchor="middle" dominant-baseline="central" font-family="system-ui, sans-serif">7</text>
+    </g></g>
+    <g transform="rotate(24)"><g transform="translate(0 -15)">
+      <rect x="-10" y="-15" width="20" height="30" rx="3.4" fill="#3B82F6" stroke="#0A0D14" stroke-width="1.1"/>
+      <ellipse cx="0" cy="0" rx="6.2" ry="13" fill="#fff" transform="rotate(22)"/>
+      <text x="0" y="0.5" fill="#3B82F6" font-size="13" font-weight="800" text-anchor="middle" dominant-baseline="central" font-family="system-ui, sans-serif">4</text>
+    </g></g>
+    <g transform="rotate(0)"><g transform="translate(0 -15)">
+      <rect x="-10" y="-15" width="20" height="30" rx="3.4" fill="#F59E0B" stroke="#0A0D14" stroke-width="1.1"/>
+      <ellipse cx="0" cy="0" rx="6.2" ry="13" fill="#fff" transform="rotate(22)"/>
+      <text x="0" y="0.5" fill="#F59E0B" font-size="13" font-weight="800" text-anchor="middle" dominant-baseline="central" font-family="system-ui, sans-serif">1</text>
+    </g></g>
+  </g>
+</svg>

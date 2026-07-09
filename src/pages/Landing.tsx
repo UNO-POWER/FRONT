@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { Logo } from "@/components/ui/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { crearSala, unirseASala } from "@/services/api";
@@ -76,8 +77,11 @@ export default function Landing() {
   return (
     <PageShell>
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-        <span className="font-display text-sm font-bold tracking-[0.25em] text-slate-300">
-          UNO<span className="text-indigo-400"> POWER-UPS</span>
+        <span className="flex items-center gap-2">
+          <Logo className="h-7 w-9" />
+          <span className="font-display text-sm font-bold tracking-[0.25em] text-slate-300">
+            UNO<span className="text-indigo-400"> POWER-UPS</span>
+          </span>
         </span>
         {sesion ? (
           <div className="flex items-center gap-1">
@@ -98,6 +102,10 @@ export default function Landing() {
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-col items-center px-6 pb-20 pt-10 sm:pt-16">
+        <motion.div {...stagger(0)} className="mb-6">
+          <Logo className="h-20 w-auto drop-shadow-[0_8px_24px_rgba(139,92,246,0.25)]" />
+        </motion.div>
+
         <motion.h1
           {...stagger(0)}
           className="text-center font-display text-5xl font-bold tracking-tight sm:text-6xl"
