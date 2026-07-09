@@ -192,7 +192,7 @@ export default function Partida() {
           mensajes={mensajes}
           miUserId={sesion.userId}
           onEnviar={(t) => conexionRef.current?.enviarChat(t)}
-          className="hidden h-auto max-h-full w-80 shrink-0 lg:flex"
+          className="hidden h-full w-80 shrink-0 lg:flex"
         />
       </div>
 
