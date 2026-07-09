@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { ChatPanel } from "@/features/chat/ChatPanel";
 import { GameTable } from "@/features/game/GameTable";
-import { OpponentBar } from "@/features/game/OpponentBar";
+import { OpponentBar, type RoboEvento } from "@/features/game/OpponentBar";
 import { PlayerHand } from "@/features/game/PlayerHand";
 import { PowerUpInventory } from "@/features/game/PowerUpInventory";
 import { ColorPickerModal, EspiaModal, TargetPickerModal } from "@/features/game/GameModals";
@@ -39,7 +39,10 @@ export default function Partida() {
   const [powerUpPendiente, setPowerUpPendiente] = useState<PowerUpTipo | null>(null);
   const [conectado, setConectado] = useState(true);
   const [chatAbierto, setChatAbierto] = useState(false);
+  const [roboPorJugador, setRoboPorJugador] = useState<Record<string, RoboEvento>>({});
   const conexionRef = useRef<ConexionSala | null>(null);
+  const estadoAnteriorRef = useRef<EstadoPartida | null>(null);
+  const siguienteRoboId = useRef(1);
 
   useEffect(() => {
     const conexion = conectarSala(codigo, {
@@ -53,6 +56,31 @@ export default function Partida() {
     conexionRef.current = conexion;
     return conexion.desconectar;
   }, [codigo, toast]);
+
+  // Detecta robos comparando el conteo de cartas contra el estado anterior: cubre tanto
+  // el robo voluntario (boton "Robar carta") como el forzado por +2/+4 o un power-up
+  // (Robo forzado), sin depender de un evento explicito del backend.
+  useEffect(() => {
+    const anterior = estadoAnteriorRef.current;
+    if (anterior && estado) {
+      for (const jugador of estado.jugadores) {
+        const previo = anterior.jugadores.find((j) => j.userId === jugador.userId);
+        const diferencia = previo ? jugador.cantidadCartas - previo.cantidadCartas : 0;
+        if (diferencia > 0) {
+          const id = siguienteRoboId.current++;
+          setRoboPorJugador((prev) => ({ ...prev, [jugador.userId]: { cantidad: diferencia, id } }));
+          window.setTimeout(() => {
+            setRoboPorJugador((prev) => {
+              if (prev[jugador.userId]?.id !== id) return prev; // ya lo reemplazo un robo mas nuevo
+              const { [jugador.userId]: _quitar, ...resto } = prev;
+              return resto;
+            });
+          }, 1500);
+        }
+      }
+    }
+    estadoAnteriorRef.current = estado;
+  }, [estado]);
 
   const jugar = useCallback((carta: Carta) => {
     if (carta.tipo === "COMODIN" || carta.tipo === "COMODIN_MAS_CUATRO") {
@@ -150,6 +178,7 @@ export default function Partida() {
             jugadores={estado.jugadores}
             turnoActualUserId={estado.turnoActualUserId}
             miUserId={sesion.userId}
+            roboPorJugador={roboPorJugador}
           />
 
           <div className="flex flex-1 flex-col items-center justify-center gap-5 py-4">

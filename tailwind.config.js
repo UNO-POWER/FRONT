@@ -32,10 +32,17 @@ export default {
           "0%, 100%": { boxShadow: "0 0 0 0 rgba(139, 92, 246, 0.45)" },
           "50%": { boxShadow: "0 0 24px 6px rgba(139, 92, 246, 0.25)" },
         },
+        // Robo de cartas (propio o forzado por +2/+4/power-up): anillo ambar que rebota.
+        "flash-robo": {
+          "0%": { boxShadow: "0 0 0 0 rgba(245, 158, 11, 0.55)" },
+          "70%": { boxShadow: "0 0 0 10px rgba(245, 158, 11, 0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(245, 158, 11, 0)" },
+        },
       },
       animation: {
         shimmer: "shimmer 1.8s linear infinite",
         "pulse-glow": "pulse-glow 2.2s ease-in-out infinite",
+        "flash-robo": "flash-robo 0.7s ease-out 2",
       },
     },
   },
