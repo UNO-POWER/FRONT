@@ -10,8 +10,12 @@ import { OpponentBar, type RoboEvento } from "@/features/game/OpponentBar";
 import { PlayerHand } from "@/features/game/PlayerHand";
 import { PowerUpInventory } from "@/features/game/PowerUpInventory";
 import { ColorPickerModal, EspiaModal, TargetPickerModal } from "@/features/game/GameModals";
+import { PowerUpLegend } from "@/features/game/PowerUpLegend";
 import { ResultOverlay } from "@/features/game/ResultOverlay";
 import { REQUIERE_OBJETIVO } from "@/features/game/powerups";
+import { esJugable } from "@/features/game/reglas";
+import { VoicePanel } from "@/features/voice/VoicePanel";
+import { crearMallaVoz, type MallaVoz, type ParticipanteVoz } from "@/features/voice/webrtc";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { conectarSala, type ConexionSala } from "@/services/socket";
@@ -40,7 +44,11 @@ export default function Partida() {
   const [conectado, setConectado] = useState(true);
   const [chatAbierto, setChatAbierto] = useState(false);
   const [roboPorJugador, setRoboPorJugador] = useState<Record<string, RoboEvento>>({});
+  const [vozActiva, setVozActiva] = useState(false);
+  const [micAbierto, setMicAbierto] = useState(true);
+  const [participantesVoz, setParticipantesVoz] = useState<ParticipanteVoz[]>([]);
   const conexionRef = useRef<ConexionSala | null>(null);
+  const mallaRef = useRef<MallaVoz | null>(null);
   const estadoAnteriorRef = useRef<EstadoPartida | null>(null);
   const siguienteRoboId = useRef(1);
 
@@ -52,10 +60,49 @@ export default function Partida() {
       onError: (e) => toast(e.mensaje, "error"),
       onEspia: setEspia,
       onConexionCambio: setConectado,
+      onVozAnuncio: (a) => mallaRef.current?.manejarAnuncio(a),
+      onVozSenal: (s) => void mallaRef.current?.manejarSenal(s),
     });
     conexionRef.current = conexion;
-    return conexion.desconectar;
+
+    const malla = crearMallaVoz({
+      miUserId: sesion?.userId ?? "",
+      anunciar: (tipo) => conexion.anunciarVoz(tipo),
+      enviarSenal: (objetivo, tipo, datos) => conexion.enviarSenalVoz(objetivo, tipo, datos),
+      onParticipantes: setParticipantesVoz,
+      onError: (m) => toast(m, "error"),
+    });
+    mallaRef.current = malla;
+
+    return () => {
+      malla.desactivar();
+      conexion.desconectar();
+    };
+    // sesion.userId es estable durante la partida (cambiarlo implica re-login y remonta la pagina)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codigo, toast]);
+
+  const activarVoz = useCallback(async () => {
+    const ok = await mallaRef.current?.activar();
+    if (ok) {
+      setVozActiva(true);
+      setMicAbierto(true);
+    }
+  }, []);
+
+  const desactivarVoz = useCallback(() => {
+    mallaRef.current?.desactivar();
+    setVozActiva(false);
+    setParticipantesVoz([]);
+  }, []);
+
+  const alternarMic = useCallback(() => {
+    setMicAbierto(mallaRef.current?.alternarMicrofono() ?? false);
+  }, []);
+
+  const silenciarPeer = useCallback((userId: string, silenciado: boolean) => {
+    mallaRef.current?.silenciarPeer(userId, silenciado);
+  }, []);
 
   // Detecta robos comparando el conteo de cartas contra el estado anterior: cubre tanto
   // el robo voluntario (boton "Robar carta") como el forzado por +2/+4 o un power-up
@@ -135,6 +182,11 @@ export default function Partida() {
   const nombreGanador = estado.jugadores.find((j) => j.userId === estado.ganadorUserId)?.username ?? null;
   const rivales = estado.jugadores.filter((j) => j.userId !== sesion.userId && !j.abandonado);
   const puedeDecirUno = (mano?.cartas.length ?? 0) === 1;
+  const sinJugadas =
+    esMiTurno &&
+    !finalizada &&
+    (mano?.cartas.length ?? 0) > 0 &&
+    !(mano?.cartas ?? []).some((c) => esJugable(c, estado.cartaSuperior, estado.colorActual));
 
   return (
     <PageShell className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-3 py-4 sm:px-6">
@@ -179,6 +231,17 @@ export default function Partida() {
             turnoActualUserId={estado.turnoActualUserId}
             miUserId={sesion.userId}
             roboPorJugador={roboPorJugador}
+            turnoVenceEn={estado.turnoVenceEn}
+          />
+
+          <VoicePanel
+            activa={vozActiva}
+            micAbierto={micAbierto}
+            participantes={participantesVoz}
+            onActivar={() => void activarVoz()}
+            onDesactivar={desactivarVoz}
+            onAlternarMic={alternarMic}
+            onSilenciar={silenciarPeer}
           />
 
           <div className="flex flex-1 flex-col items-center justify-center gap-5 py-4">
@@ -188,6 +251,7 @@ export default function Partida() {
               direccion={estado.direccion}
               powerUpActivo={estado.powerUpActivo}
               esMiTurno={esMiTurno && !finalizada}
+              resaltarRobar={sinJugadas}
               onRobar={robar}
               onCapturarPowerUp={capturar}
             />
@@ -212,17 +276,31 @@ export default function Partida() {
                 )}
               </AnimatePresence>
             </div>
-            <PlayerHand cartas={mano?.cartas ?? []} esMiTurno={esMiTurno && !finalizada} onJugar={jugar} />
+            <PlayerHand
+              cartas={mano?.cartas ?? []}
+              esMiTurno={esMiTurno && !finalizada}
+              cartaSuperior={estado.cartaSuperior}
+              colorActual={estado.colorActual}
+              onJugar={jugar}
+            />
+            {/* En mobile la leyenda va bajo la mano (el sidebar no existe) */}
+            <div className="lg:hidden">
+              <PowerUpLegend />
+            </div>
           </div>
         </div>
 
-        {/* Chat: sidebar en desktop, sheet en mobile */}
-        <ChatPanel
-          mensajes={mensajes}
-          miUserId={sesion.userId}
-          onEnviar={(t) => conexionRef.current?.enviarChat(t)}
-          className="hidden h-full w-80 shrink-0 lg:flex"
-        />
+        {/* Sidebar desktop: chat con altura FIJA (como en el lobby, nunca crece con los
+            mensajes) + leyenda de poderes debajo para aprovechar el espacio */}
+        <div className="hidden w-80 shrink-0 flex-col gap-4 lg:flex">
+          <ChatPanel
+            mensajes={mensajes}
+            miUserId={sesion.userId}
+            onEnviar={(t) => conexionRef.current?.enviarChat(t)}
+            className="h-96"
+          />
+          <PowerUpLegend compacta />
+        </div>
       </div>
 
       <button

@@ -76,14 +76,38 @@ export function ResultOverlay({ visible, gane, nombreGanador }: ResultOverlayPro
                 {gane ? "Dominaste la arena. Bien jugado." : nombreGanador ? `Gano ${nombreGanador}. La proxima es tuya.` : "La partida ha terminado."}
               </p>
             </div>
+            {sesion?.esInvitado && (
+              <div className="w-full rounded-xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-left">
+                <p className="text-sm font-semibold text-amber-200">Jugaste como invitado</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Esta partida no quedo guardada. Crea una cuenta para que tus proximas partidas,
+                  victorias y racha cuenten en tus estadisticas. Si prefieres seguir de invitado,
+                  siempre podras registrarte despues desde el inicio.
+                </p>
+              </div>
+            )}
+
             <div className="flex w-full flex-col gap-2">
-              <Button size="lg" onClick={() => navigate("/")}>
-                Jugar de nuevo
-              </Button>
-              {sesion && !sesion.esInvitado && (
-                <Button variant="ghost" onClick={() => navigate("/stats")}>
-                  Ver mis estadisticas
-                </Button>
+              {sesion?.esInvitado ? (
+                <>
+                  <Button size="lg" onClick={() => navigate("/auth")}>
+                    Crear cuenta y guardar mi progreso
+                  </Button>
+                  <Button variant="ghost" onClick={() => navigate("/")}>
+                    Seguir como invitado
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="lg" onClick={() => navigate("/")}>
+                    Jugar de nuevo
+                  </Button>
+                  {sesion && (
+                    <Button variant="ghost" onClick={() => navigate("/stats")}>
+                      Ver mis estadisticas
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
