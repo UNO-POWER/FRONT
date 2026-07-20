@@ -8,8 +8,10 @@ export interface CartaViewProps {
   onClick?: () => void;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
-  /** Resalta la carta como jugable (elevacion + anillo al hover). */
+  /** Resalta la carta como jugable (anillo visible + refuerzo al hover). */
   jugable?: boolean;
+  /** Atenua la carta como no jugable en este turno (sigue siendo clickeable: el servidor arbitra). */
+  atenuada?: boolean;
 }
 
 const FONDO: Record<ColorCarta, string> = {
@@ -57,7 +59,7 @@ export function etiquetaCarta(carta: Carta): string {
   return carta.color === "COMODIN" ? tipo : `${tipo} ${carta.color.toLowerCase()}`;
 }
 
-export const CartaView = memo(function CartaView({ carta, onClick, disabled, size = "md", jugable }: CartaViewProps) {
+export const CartaView = memo(function CartaView({ carta, onClick, disabled, size = "md", jugable, atenuada }: CartaViewProps) {
   const reducirMovimiento = useReducedMotion();
   const contenido = carta.tipo === "NUMERO" ? carta.valor : SIMBOLO[carta.tipo];
   const interactiva = !!onClick;
@@ -94,7 +96,11 @@ export const CartaView = memo(function CartaView({ carta, onClick, disabled, siz
       whileHover={reducirMovimiento || disabled ? undefined : { y: -10, scale: 1.05 }}
       whileTap={reducirMovimiento || disabled ? undefined : { scale: 0.97 }}
       transition={{ type: "spring", stiffness: 400, damping: 26 }}
-      className={cn(clases, jugable && !disabled && "hover:ring-2 hover:ring-white/70")}
+      className={cn(
+        clases,
+        jugable && !disabled && "ring-2 ring-white/50 hover:ring-white/90",
+        atenuada && !disabled && "opacity-50 saturate-50",
+      )}
     >
       {forma}
       {contenido}

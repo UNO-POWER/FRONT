@@ -10,6 +10,8 @@ export interface GameTableProps {
   direccion: 1 | -1;
   powerUpActivo: PowerUpPublico | null;
   esMiTurno: boolean;
+  /** Resalta el mazo cuando el jugador no tiene ninguna carta jugable (guia visual). */
+  resaltarRobar?: boolean;
   onRobar: () => void;
   onCapturarPowerUp: (id: string) => void;
 }
@@ -29,6 +31,7 @@ export function GameTable({
   direccion,
   powerUpActivo,
   esMiTurno,
+  resaltarRobar,
   onRobar,
   onCapturarPowerUp,
 }: GameTableProps) {
@@ -50,6 +53,7 @@ export function GameTable({
             "relative h-24 w-16 rounded-xl border border-white/15 shadow-lg shadow-black/40",
             "bg-[repeating-linear-gradient(45deg,#1e1b4b_0_8px,#312e81_8px_16px)]",
             "disabled:opacity-45",
+            resaltarRobar && esMiTurno && "ring-2 ring-amber-400/70 animate-pulse-glow",
           )}
         >
           <span
