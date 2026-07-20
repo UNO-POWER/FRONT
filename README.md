@@ -3,6 +3,7 @@
 > Cliente web de **UNO Power-Ups Arena**: React 18 + TypeScript + Tailwind, con conexión
 > REST al API Gateway y WebSocket directo al Game Service.
 
+[![CI](https://github.com/UNO-POWER/FRONT/actions/workflows/ci.yml/badge.svg)](https://github.com/UNO-POWER/FRONT/actions/workflows/ci.yml)
 [![React](https://img.shields.io/badge/React-18.3-61dafb)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178c6)]()
 [![Vite](https://img.shields.io/badge/Vite-5.4-646cff)]()
@@ -189,20 +190,25 @@ FRONT/
 │   │   ├── AuthContext.tsx           # sesion (token/userId/username/esInvitado) en localStorage
 │   │   └── ToastContext.tsx          # notificaciones globales
 │   ├── features/
-│   │   ├── chat/ChatPanel.tsx        # HU-05
+│   │   ├── chat/ChatPanel.tsx        # HU-05 (texto)
+│   │   ├── voice/
+│   │   │   ├── webrtc.ts             # malla P2P de audio (WebRTC) + protocolo anti-glare
+│   │   │   └── VoicePanel.tsx        # UI: activar voz, mic on/off, quien habla, silenciar
 │   │   └── game/
 │   │       ├── CartaView.tsx
 │   │       ├── GameModals.tsx        # selector de color, objetivo de power-up, resultado espia
 │   │       ├── GameTable.tsx         # carta superior, mazo, power-up visible
 │   │       ├── OpponentBar.tsx       # rivales + turno activo + animacion de robo
-│   │       ├── PlayerHand.tsx
+│   │       ├── PlayerHand.tsx        # mano ordenada + resaltado de cartas jugables
 │   │       ├── PowerUpInventory.tsx
+│   │       ├── PowerUpLegend.tsx     # leyenda fija: que hace cada poder
 │   │       ├── powerups.ts           # metadata de los 5 power-ups (icono, texto, REQUIERE_OBJETIVO)
+│   │       ├── reglas.ts             # espejo de esJugableSobre + orden de la mano (solo visual)
 │   │       └── ResultOverlay.tsx     # pantalla de victoria/derrota
 │   ├── hooks/
 │   │   ├── useCopyToClipboard.ts
 │   │   └── useCountUp.ts
-│   ├── pages/         # Landing, Auth, SalasPublicas, Lobby, Partida, Stats, NotFound
+│   ├── pages/         # Landing, Auth, SalasPublicas, Lobby, Partida, Stats, Config, NotFound
 │   ├── services/
 │   │   ├── api.ts     # cliente REST hacia el API Gateway
 │   │   ├── socket.ts  # cliente STOMP directo al Game Service
@@ -256,6 +262,7 @@ FRONT/
 | `/sala/:codigo` | `Lobby` | Sala de espera, roster en tiempo real |
 | `/partida/:codigo` | `Partida` | Tablero de juego completo |
 | `/stats` | `Stats` | Estadísticas personales (requiere cuenta, no disponible para invitados) |
+| `/config` | `Config` | Configuración del perfil: cambiar el nombre de usuario (solo cuentas registradas) |
 | `*` | `NotFound` | 404 |
 
 Todas las pantallas se cargan con `React.lazy` + `Suspense` (`PageLoader` como *fallback*) para
@@ -271,8 +278,9 @@ directo. Funciones expuestas:
 | Función | Endpoint | Requiere auth |
 |---|---|---|
 | `entrarComoInvitado(nombre)` | `POST /api/usuarios/guest` | ❌ |
-| `registrarUsuario(username, password)` | `POST /api/usuarios/registro` | ❌ |
-| `iniciarSesion(username, password)` | `POST /api/usuarios/login` | ❌ |
+| `registrarUsuario(username, email, password)` | `POST /api/usuarios/registro` | ❌ |
+| `iniciarSesion(usernameOCorreo, password)` | `POST /api/usuarios/login` (login dual: usuario o correo) | ❌ |
+| `actualizarUsername(username)` | `PATCH /api/usuarios/me` (devuelve JWT re-emitido que la sesión adopta) | ✅ |
 | `crearSala(publica)` | `POST /api/salas` | ✅ |
 | `unirseASala(codigo)` | `POST /api/salas/{codigo}/unirse` | ✅ |
 | `obtenerSala(codigo)` | `GET /api/salas/{codigo}` | ✅ |
@@ -298,6 +306,8 @@ SockJS hacia `VITE_GAME_SERVICE_WS_URL`, con el JWT en el header `Authorization`
 | `/user/queue/mano` | `onMano` |
 | `/user/queue/errores` | `onError` |
 | `/user/queue/espia` | `onEspia` |
+| `/topic/sala/{codigo}/voice` | `onVozAnuncio` (entradas/salidas del canal de voz) |
+| `/user/queue/voice` | `onVozSenal` (señales WebRTC dirigidas a mí) |
 
 Justo tras el `onConnect`, publica a `/app/partidas/{codigo}/sincronizar` — necesario porque el
 broker STOMP del backend no reenvía mensajes pasados a un suscriptor nuevo (ver
@@ -311,6 +321,16 @@ entra tarde o se reconecta se quedaría sin estado hasta la siguiente jugada aje
 `reconnectDelay: 2000` — la librería STOMP.js reintenta la conexión sola cada 2s si se pierde; el
 callback `onWebSocketClose`/reconexión alimenta el banner "Conexión perdida. Reconectando…" que
 se ve en `Partida.tsx`.
+
+### Voz (WebRTC P2P)
+
+`features/voice/webrtc.ts` arma una **malla P2P de audio** entre los jugadores que activan la voz:
+el audio va directo navegador↔navegador (cifrado DTLS-SRTP, nunca pasa por el backend); solo la
+señalización (offers/answers/ICE) viaja por el mismo WebSocket STOMP, con los métodos
+`anunciarVoz`/`enviarSenalVoz` de `ConexionSala`. Anti-glare: al recibir un anuncio "presente",
+solo el lado con `userId` menor crea la oferta. `VoicePanel.tsx` muestra el toggle de micrófono,
+quién está en voz, quién habla (detección por `AnalyserNode`, umbral cada 300ms) y silencio local
+por jugador. Requiere permiso de micrófono (se pide al pulsar "Activar voz", nunca automático).
 
 ---
 
@@ -390,7 +410,7 @@ Verificación manual recomendada (camino feliz + bordes):
 | Pantalla en blanco tras `npm run dev` | `.env` no existe o le faltan variables | `cp .env.example .env` y reiniciar el servidor de dev |
 | Errores CORS en consola | El origen de `http://localhost:5173` no está en `CORS_ALLOWED_ORIGINS` del Gateway/Game Service | Ajustar esa variable en los backends, no en el frontend |
 | La partida se queda en "Conectando a la partida…" | El WebSocket no logra conectar (backend caído, o `VITE_GAME_SERVICE_WS_URL` incorrecta) | Verificar `curl $VITE_GAME_SERVICE_WS_URL/info` (endpoint de info de SockJS) |
-| El chat crece indefinidamente y estira la página | Bug histórico corregido: el contenedor usaba `h-auto` en vez de `h-full`, rompiendo el `overflow-y-auto` interno | Ya corregido en `Partida.tsx`; si reaparece, confirmar que el contenedor del `ChatPanel` use `h-full` dentro de una fila flex ya acotada |
+| El chat crece indefinidamente y estira la página | Bug histórico corregido en dos iteraciones: hoy el chat del sidebar tiene **altura fija** (`h-96`, igual patrón que el lobby con `h-64`) con scroll interno, y la leyenda de poderes vive debajo de él | Ya corregido en `Partida.tsx`; si reaparece, confirmar que el `ChatPanel` del sidebar conserve una altura fija (no `h-auto`/`h-full`) |
 | Cambié `VITE_API_URL` y no surte efecto | Las variables `VITE_*` se inyectan en build-time | Reiniciar `npm run dev`, o rehacer `npm run build` si es producción |
 
 ---
