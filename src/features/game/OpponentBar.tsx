@@ -1,4 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useCountdown } from "@/hooks/useCountdown";
 import type { JugadorPublico } from "@/types/game";
 import { cn } from "@/utils/cn";
 
@@ -13,11 +14,20 @@ export interface OpponentBarProps {
   miUserId: string | null;
   /** userId -> ultimo robo detectado (propio o forzado por +2/+4/power-up), para animar. */
   roboPorJugador?: Record<string, RoboEvento>;
+  /** Vencimiento del turno actual (ISO): countdown visible en el chip del jugador en turno. */
+  turnoVenceEn?: string | null;
 }
 
 /** Fila de jugadores: el turno activo lleva anillo con glow animado (layoutId compartido). */
-export function OpponentBar({ jugadores, turnoActualUserId, miUserId, roboPorJugador }: OpponentBarProps) {
+export function OpponentBar({
+  jugadores,
+  turnoActualUserId,
+  miUserId,
+  roboPorJugador,
+  turnoVenceEn,
+}: OpponentBarProps) {
   const reducirMovimiento = useReducedMotion();
+  const segundosRestantes = useCountdown(turnoVenceEn ?? null);
 
   return (
     <ul aria-label="Jugadores en la partida" className="flex justify-center gap-2 overflow-x-auto px-1 py-2 sm:gap-3">
@@ -74,6 +84,20 @@ export function OpponentBar({ jugadores, turnoActualUserId, miUserId, roboPorJug
                 {j.escudoActivo && (
                   <span title="Escudo activo" aria-label="Escudo activo">
                     🛡️
+                  </span>
+                )}
+                {esTurno && segundosRestantes !== null && (
+                  <span
+                    role="timer"
+                    aria-label={`Quedan ${segundosRestantes} segundos de turno`}
+                    className={cn(
+                      "rounded-full px-1.5 font-display text-[0.65rem] font-bold tabular-nums",
+                      segundosRestantes <= 5
+                        ? "bg-rose-500/20 text-rose-300 animate-pulse"
+                        : "bg-indigo-500/20 text-indigo-200",
+                    )}
+                  >
+                    ⏱ {segundosRestantes}s
                   </span>
                 )}
               </span>

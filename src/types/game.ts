@@ -48,6 +48,8 @@ export interface EstadoPartida {
   estado: "EN_CURSO" | "FINALIZADA";
   ganadorUserId: string | null;
   powerUpActivo: PowerUpPublico | null;
+  /** Instante ISO en que vence el turno actual (countdown); null si la partida finalizo. */
+  turnoVenceEn: string | null;
 }
 
 export interface Mano {
