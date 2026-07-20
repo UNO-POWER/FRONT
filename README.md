@@ -7,7 +7,6 @@
 [![React](https://img.shields.io/badge/React-18.3-61dafb)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178c6)]()
 [![Vite](https://img.shields.io/badge/Vite-5.4-646cff)]()
-[![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
 
@@ -32,8 +31,7 @@
 17. [Solución de problemas](#17-solución-de-problemas)
 18. [Roadmap](#18-roadmap)
 19. [Contribución](#19-contribución)
-20. [Licencia](#20-licencia)
-21. [Autor](#21-autor)
+20. [Autor](#20-autor)
 
 ---
 
@@ -73,7 +71,7 @@ El frontend habla con **dos** destinos de red distintos, deliberadamente:
 - Todo lo que es tiempo real dentro de una partida (jugadas, robos, power-ups, chat) va por
   **WebSocket directo al Game Service** — `src/services/socket.ts` — sin pasar por el Gateway,
   para minimizar la latencia percibida en cada acción (ver
-  [`GameService/README.md`](../GameService/README.md#1-descripción)).
+  [`GameService/README.md`](https://github.com/UNO-POWER/GameService)).
 
 ### Capas de la aplicación
 
@@ -135,8 +133,7 @@ reiniciar `npm run dev` o rehacer el build):
 | `VITE_GAME_SERVICE_WS_URL` | ✅ | `http://localhost:8083/ws-game` | Endpoint del WebSocket (SockJS), directo al Game Service |
 
 En producción (AWS), estas dos variables apuntan al mismo dominio HTTPS (vía el proxy `nginx` de
-borde) en vez de a hosts/puertos separados — ver
-[`deploy/README.md`](../deploy/README.md).
+borde) en vez de a hosts/puertos separados.
 
 ---
 
@@ -169,8 +166,8 @@ los estáticos.
 
 ### AWS (S3 + CloudFront)
 
-El build (`dist/`) se publica a un bucket S3 privado servido detrás de CloudFront — ver el
-runbook completo en [`deploy/DEPLOY.md`](../deploy/DEPLOY.md).
+El build (`dist/`) se publica a un bucket S3 privado servido detrás de CloudFront (con la
+configuración de SPA que redirige 403/404 a `index.html`).
 
 ---
 
@@ -311,12 +308,12 @@ SockJS hacia `VITE_GAME_SERVICE_WS_URL`, con el JWT en el header `Authorization`
 
 Justo tras el `onConnect`, publica a `/app/partidas/{codigo}/sincronizar` — necesario porque el
 broker STOMP del backend no reenvía mensajes pasados a un suscriptor nuevo (ver
-[`GameService/README.md §9`](../GameService/README.md#9-flujo-interno)); sin esto, un cliente que
+[`GameService/README.md §9`](https://github.com/UNO-POWER/GameService)); sin esto, un cliente que
 entra tarde o se reconecta se quedaría sin estado hasta la siguiente jugada ajena.
 
 `ConexionSala` expone métodos de acción (`jugar`, `robar`, `decirUno`, `capturarPowerUp`,
 `usarPowerUp`, `enviarChat`) que simplemente publican al destino STOMP correspondiente
-(documentado en detalle en [`GameService/README.md §11`](../GameService/README.md#11-websocket--stomp)).
+(documentado en detalle en [`GameService/README.md §11`](https://github.com/UNO-POWER/GameService)).
 
 `reconnectDelay: 2000` — la librería STOMP.js reintenta la conexión sola cada 2s si se pierde; el
 callback `onWebSocketClose`/reconexión alimenta el banner "Conexión perdida. Reconectando…" que
@@ -337,7 +334,7 @@ por jugador. Requiere permiso de micrófono (se pide al pulsar "Activar voz", nu
 ## 13. Animación de robo de cartas
 
 Detección **sin evento explícito del backend**: `EstadoPartida` solo expone `cantidadCartas` por
-jugador (nunca las cartas ajenas, ver [§15 de GameService](../GameService/README.md#15-seguridad)).
+jugador (nunca las cartas ajenas, ver [§15 de GameService](https://github.com/UNO-POWER/GameService)).
 En `Partida.tsx`, cada vez que llega un `EstadoPartida` nuevo se compara contra el snapshot
 anterior (guardado en un `useRef`, para no disparar un re-render extra solo por guardar el
 histórico):
@@ -395,11 +392,11 @@ Verificación manual recomendada (camino feliz + bordes):
 
 ## 16. Despliegue
 
-- **Docker**: `Dockerfile` multi-stage (Node build → nginx sirviendo `dist/`).
-- **Docker Compose**: servicio `front` en [`docker-compose.yml`](../docker-compose.yml) (dev).
-- **AWS**: build estático publicado a S3, servido vía CloudFront con TLS — ver
-  [`deploy/README.md`](../deploy/README.md) y [`deploy/DEPLOY.md`](../deploy/DEPLOY.md) para el
-  procedimiento completo, incluida la configuración de SPA (redirigir 403/404 a `index.html`).
+- **Docker**: `Dockerfile` multi-stage (Node build → nginx sirviendo `dist/`) incluido en este
+  repositorio.
+- **Orquestación**: en desarrollo se levanta con Docker Compose junto al resto de servicios.
+- **AWS**: build estático publicado a S3, servido vía CloudFront con TLS, con la configuración de
+  SPA que redirige 403/404 a `index.html`.
 
 ---
 
@@ -436,15 +433,7 @@ Verificación manual recomendada (camino feliz + bordes):
 
 ---
 
-## 20. Licencia
-
-MIT — ver [`LICENSE`](../LICENSE) en el repositorio raíz.
-
----
-
-## 21. Autor
+## 20. Autor
 
 **DUCU** — Desarrollador Full-Stack (individual), proyecto de la asignatura ARSW.
 Organización GitHub: [UNO-POWER](https://github.com/UNO-POWER).
-
-Repositorio raíz del sistema: **[UNO Power-Ups Arena](../README.md)**.
