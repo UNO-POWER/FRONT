@@ -15,6 +15,19 @@ import { obtenerToken } from "./token";
 
 const GAME_WS_URL = import.meta.env.VITE_GAME_SERVICE_WS_URL ?? "http://localhost:8083/ws-game";
 
+export interface AnuncioVoz {
+  userId: string;
+  username: string;
+  tipo: "presente" | "salida";
+}
+
+export interface SenalVoz {
+  deUserId: string;
+  deUsername: string;
+  tipo: string;
+  datos: string;
+}
+
 export interface CallbacksSala {
   onRoster?: (sala: SalaResponse) => void;
   onEstadoPartida?: (estado: EstadoPartida) => void;
@@ -23,6 +36,8 @@ export interface CallbacksSala {
   onError?: (error: ErrorJuego) => void;
   onEspia?: (resultado: EspiaResultado) => void;
   onConexionCambio?: (conectado: boolean) => void;
+  onVozAnuncio?: (anuncio: AnuncioVoz) => void;
+  onVozSenal?: (senal: SenalVoz) => void;
 }
 
 export interface ConexionSala {
@@ -33,6 +48,10 @@ export interface ConexionSala {
   capturarPowerUp: (powerUpId: string) => void;
   usarPowerUp: (tipo: PowerUpTipo, objetivoUserId: string | null) => void;
   enviarChat: (texto: string) => void;
+  /** Voz (WebRTC): anuncia entrada/salida del canal de voz de la sala. */
+  anunciarVoz: (tipo: "presente" | "salida") => void;
+  /** Voz (WebRTC): retransmite una senal (offer/answer/ice) al objetivo via el backend. */
+  enviarSenalVoz: (objetivoUserId: string, tipo: string, datos: string) => void;
 }
 
 /**
@@ -56,6 +75,8 @@ export function conectarSala(codigo: string, callbacks: CallbacksSala): Conexion
       sub<Mano>("/user/queue/mano", callbacks.onMano);
       sub<ErrorJuego>("/user/queue/errores", callbacks.onError);
       sub<EspiaResultado>("/user/queue/espia", callbacks.onEspia);
+      sub<AnuncioVoz>(`/topic/sala/${codigo}/voice`, callbacks.onVozAnuncio);
+      sub<SenalVoz>("/user/queue/voice", callbacks.onVozSenal);
 
       // El broker simple no reenvia mensajes pasados: pedimos el estado actual al conectar.
       client.publish({ destination: `/app/partidas/${codigo}/sincronizar` });
@@ -78,5 +99,8 @@ export function conectarSala(codigo: string, callbacks: CallbacksSala): Conexion
     capturarPowerUp: (powerUpId) => enviar(`/app/partidas/${codigo}/powerups/capturar`, { powerUpId }),
     usarPowerUp: (tipo, objetivoUserId) => enviar(`/app/partidas/${codigo}/powerups/usar`, { tipo, objetivoUserId }),
     enviarChat: (texto) => enviar(`/app/salas/${codigo}/chat`, { texto }),
+    anunciarVoz: (tipo) => enviar(`/app/salas/${codigo}/voice/anuncio`, { tipo }),
+    enviarSenalVoz: (objetivoUserId, tipo, datos) =>
+      enviar(`/app/salas/${codigo}/voice/senal`, { objetivoUserId, tipo, datos }),
   };
 }
