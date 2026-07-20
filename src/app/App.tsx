@@ -10,6 +10,7 @@ const SalasPublicas = lazy(() => import("@/pages/SalasPublicas"));
 const Lobby = lazy(() => import("@/pages/Lobby"));
 const Partida = lazy(() => import("@/pages/Partida"));
 const Stats = lazy(() => import("@/pages/Stats"));
+const Config = lazy(() => import("@/pages/Config"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/salas" element={<SalasPublicas />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="/config" element={<Config />} />
           <Route path="/sala/:codigo" element={<Lobby />} />
           <Route path="/partida/:codigo" element={<Partida />} />
           <Route path="*" element={<NotFound />} />

@@ -19,7 +19,7 @@ export class ApiError extends Error {
 }
 
 interface RequestOptions {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PATCH";
   body?: unknown;
   auth?: boolean;
 }
@@ -49,11 +49,21 @@ async function request<T>(path: string, { method = "GET", body, auth = true }: R
 export const entrarComoInvitado = (nombre: string) =>
   request<AuthResponse>("/api/usuarios/guest", { method: "POST", body: { nombre }, auth: false });
 
-export const registrarUsuario = (username: string, password: string) =>
-  request<AuthResponse>("/api/usuarios/registro", { method: "POST", body: { username, password }, auth: false });
+export const registrarUsuario = (username: string, email: string, password: string) =>
+  request<AuthResponse>("/api/usuarios/registro", { method: "POST", body: { username, email, password }, auth: false });
 
-export const iniciarSesion = (username: string, password: string) =>
-  request<AuthResponse>("/api/usuarios/login", { method: "POST", body: { username, password }, auth: false });
+// El campo "username" acepta usuario o correo (login dual).
+export const iniciarSesion = (usernameOCorreo: string, password: string) =>
+  request<AuthResponse>("/api/usuarios/login", {
+    method: "POST",
+    body: { username: usernameOCorreo, password },
+    auth: false,
+  });
+
+// ── Perfil ──────────────────────────────────────────────────────────────────
+// Devuelve un JWT re-emitido con el username nuevo: hay que adoptarlo como sesion.
+export const actualizarUsername = (username: string) =>
+  request<AuthResponse>("/api/usuarios/me", { method: "PATCH", body: { username } });
 
 // ── Salas (HU-01/HU-02/HU-03) ───────────────────────────────────────────────
 export const crearSala = (publica = false) =>

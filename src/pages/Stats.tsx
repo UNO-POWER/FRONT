@@ -83,11 +83,16 @@ export default function Stats() {
           ← Volver
         </Link>
         {sesion && (
-          <span className="flex items-center gap-2 text-sm text-slate-300">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 font-display text-xs font-bold text-white">
-              {sesion.username.charAt(0).toUpperCase()}
+          <span className="flex items-center gap-3 text-sm text-slate-300">
+            <span className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 font-display text-xs font-bold text-white">
+                {sesion.username.charAt(0).toUpperCase()}
+              </span>
+              {sesion.username}
             </span>
-            {sesion.username}
+            <Link to="/config" aria-label="Configuracion del perfil" className="text-slate-400 hover:text-slate-200">
+              ⚙️
+            </Link>
           </span>
         )}
       </header>

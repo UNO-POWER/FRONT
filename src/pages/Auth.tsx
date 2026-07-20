@@ -22,6 +22,7 @@ export default function Auth() {
 
   const [modo, setModo] = useState<Modo>("login");
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verPassword, setVerPassword] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -35,7 +36,7 @@ export default function Auth() {
       if (modo === "login") {
         await iniciarSesion(username.trim(), password);
       } else {
-        await registrarse(username.trim(), password);
+        await registrarse(username.trim(), email.trim(), password);
         toast("Cuenta creada. ¡A jugar!", "success");
       }
       navigate("/");
@@ -89,15 +90,27 @@ export default function Auth() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="Usuario"
+            label={modo === "login" ? "Usuario o correo" : "Usuario"}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             minLength={3}
-            maxLength={40}
+            maxLength={modo === "login" ? 120 : 40}
             required
             autoComplete="username"
-            hint={modo === "registro" ? "Entre 3 y 40 caracteres." : undefined}
+            hint={modo === "registro" ? "Entre 3 y 40 caracteres. Podras cambiarlo en Configuracion." : undefined}
           />
+          {modo === "registro" && (
+            <Input
+              label="Correo electronico"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              maxLength={120}
+              required
+              autoComplete="email"
+              hint="Tambien podras iniciar sesion con el."
+            />
+          )}
           <div className="relative">
             <Input
               label="Contrasena"

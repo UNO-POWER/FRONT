@@ -6,8 +6,10 @@ import type { AuthResponse } from "@/types/api";
 interface AuthContextValue {
   sesion: Sesion | null;
   entrarComoInvitado: (nombre: string) => Promise<Sesion>;
-  iniciarSesion: (username: string, password: string) => Promise<Sesion>;
-  registrarse: (username: string, password: string) => Promise<Sesion>;
+  iniciarSesion: (usernameOCorreo: string, password: string) => Promise<Sesion>;
+  registrarse: (username: string, email: string, password: string) => Promise<Sesion>;
+  /** Cambia el username y adopta el JWT re-emitido por el backend. */
+  actualizarUsername: (username: string) => Promise<Sesion>;
   cerrarSesion: () => void;
 }
 
@@ -31,8 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       sesion,
       entrarComoInvitado: async (nombre) => adoptar(await api.entrarComoInvitado(nombre), true),
-      iniciarSesion: async (username, password) => adoptar(await api.iniciarSesion(username, password), false),
-      registrarse: async (username, password) => adoptar(await api.registrarUsuario(username, password), false),
+      iniciarSesion: async (usernameOCorreo, password) =>
+        adoptar(await api.iniciarSesion(usernameOCorreo, password), false),
+      registrarse: async (username, email, password) =>
+        adoptar(await api.registrarUsuario(username, email, password), false),
+      actualizarUsername: async (username) => adoptar(await api.actualizarUsername(username), false),
       cerrarSesion: () => {
         limpiarSesion();
         setSesion(null);

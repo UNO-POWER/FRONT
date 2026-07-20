@@ -86,9 +86,14 @@ export default function Landing() {
         {sesion ? (
           <div className="flex items-center gap-1">
             {!sesion.esInvitado && (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/stats")}>
-                Mis estadisticas
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/stats")}>
+                  Mis estadisticas
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/config")} aria-label="Configuracion">
+                  ⚙️
+                </Button>
+              </>
             )}
             <Button variant="ghost" size="sm" onClick={cerrarSesion}>
               Cerrar sesion
